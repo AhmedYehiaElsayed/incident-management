@@ -2,6 +2,7 @@
   "name": "incident-management",
   "version": "1.0.0",
   "dependencies": {
+    "@cap-js/hana": "^2",
     "@sap/cds": "^9"
   },
   "devDependencies": {
@@ -19,17 +20,27 @@
           "kind": "mocked",
           "users": {
             "Ahmed": {
-              "roles": ["support"]
+              "roles": [
+                "support"
+              ]
             },
             "Yehia": {
-              "roles": ["admin"]
+              "roles": [
+                "admin"
+              ]
             },
             "AhmedYehia": {
-              "roles": ["admin" , "support" ],
+              "roles": [
+                "admin",
+                "support"
+              ],
               "password": "123"
             }
           }
         }
+      },
+      "[production]": {
+        "db": "hana"
       }
     }
   },
