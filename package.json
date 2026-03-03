@@ -49,7 +49,14 @@
       "destinations": true,
       "html5-repo": true,
       "workzone": true
+    },
+    "fiori": {
+      "preview": true
+    },
+    "server": {
+      "index": true
     }
+
   },
   "private": true,
   "workspaces": [
