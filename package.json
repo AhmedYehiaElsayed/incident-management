@@ -8,6 +8,7 @@
   },
   "devDependencies": {
     "@cap-js/sqlite": "^2",
+    "@ui5/cli": "^4.0.46",
     "cds-plugin-ui5": "^0.13.0"
   },
   "scripts": {
