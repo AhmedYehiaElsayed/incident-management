@@ -62,11 +62,23 @@ jobs:
             cf target -o "$CF_ORG" -s "$CF_SPACE" || true
           fi
          
+      - name: Setup Node.js (UI5-compatible)
+        uses: actions/setup-node@v4
+        with:
+         node-version: '20.11.1'   # UI5 CLI v4 needs >= 20.11
+         cache: 'npm'
+ 
+ 
+      - name: Install UI5 CLI (global)
+        run: |
+          npm i -g @ui5/cli@^4
+          ui5 --version
+ 
       - name: Install MBT (MTA Builder)
         run: |
-          npm install -g mbt --unsafe-perm
+          npm i -g mbt@^1.2.34 --unsafe-perm
           mbt --version
- 
+
  
       - name: Build the mta file
         run: mbt build
