@@ -1,11 +1,11 @@
-name: Hello World Pipeline
+name: SAP CAP HANA Deploy Pipeline
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  init-worker:
+  deploy-cap:
     runs-on: ubuntu-latest
 
     steps:
@@ -33,5 +33,15 @@ jobs:
           cf target -o "${{ secrets.CF_ORG }}" -s "${{ secrets.CF_SPACE }}"
           cf target
 
-      - name: Get Apps
+      - name: Install MBT (Multi-Target Build Tool)
+        run: npm install -g mbt
+
+      - name: Build CAP Project (MTA)
+        run: mbt build
+
+      - name: Deploy MTA Archive
+        run: |
+          cf deploy mta_archives/incident-management_1.0.0.mtar
+
+      - name: List Deployed Apps
         run: cf apps
