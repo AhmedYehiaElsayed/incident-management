@@ -38,13 +38,20 @@ jobs:
       
       - name: Install UI5 CLI
         run: npm install -g @ui5/cli
-        
+
+      - name: Build UI Module (incidents)
+        run: cd app/incidents
+             npm install
+             npm run build 
+      - name: Install MBT (Multi-Target Build Tool)
+        run:  npm install -g mbt 
+
       - name: Build CAP Project (MTA)
         run: mbt build
 
       - name: Deploy MTA Archive
         run: |
-          cf deploy mta_archives/incident-management_1.0.0.mtar
+          cf deploy mta_archives/incident-management_1.0.0.mtar --retries
 
       - name: List Deployed Apps
         run: cf apps
