@@ -1,7 +1,7 @@
 name: Hello World Pipeline
 on:
   push:
-    branches: [Adding-CI/CD-Service]
+    branches: [main]
  
 jobs:
   init-worker:
