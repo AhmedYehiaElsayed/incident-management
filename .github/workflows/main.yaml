@@ -1,57 +1,115 @@
-name: SAP CAP HANA Deploy Pipeline
-
+name: Hello World Pipeline
 on:
   push:
     branches: [ main ]
-
+ 
+ 
 jobs:
-  deploy-cap:
+  init-worker:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Setup Node.js
+ 
+      - name: Setup Node.js (placeholder)
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
-
-      - name: Install Cloud Foundry CLI
+          node-version: '18'
+ 
+      - name: Initialize worker (placeholder)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y wget gnupg
-          wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | sudo tee /etc/apt/trusted.gpg.d/cf.asc
-          echo "deb https://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
-          sudo apt-get update
-          sudo apt-get install -y cf8-cli
-
-      - name: Cloud Foundry Login
+          echo "Initialize worker - placeholder"
+ 
+      - name: Install Cloud Foundry CLI v8
+        shell: bash
         run: |
-          cf api "${{ secrets.CF_API }}"
-          cf auth "${{ secrets.CF_USERNAME }}" "${{ secrets.CF_PASSWORD }}"
-          cf target -o "${{ secrets.CF_ORG }}" -s "${{ secrets.CF_SPACE }}"
-          cf target
-
-      - name: Install MBT (Multi-Target Build Tool)
-        run: npm install -g mbt
-      
-      - name: Install UI5 CLI
-        run: npm install -g @ui5/cli
-
-      - name: Build UI Module (incidents)
-        run: cd app/incidents
-             npm install
-             npm run build 
-      - name: Install MBT (Multi-Target Build Tool)
-        run:  npm install -g mbt 
-
-      - name: Build CAP Project (MTA)
+          set -euo pipefail
+          cd /tmp
+          # Download latest stable CF CLI v8 linux64 binary
+          curl -fsSL "https://packages.cloudfoundry.org/stable?release=linux64-binary&version=v8&source=github" -o cf8.tgz
+          tar -xzf cf8.tgz
+          # The tar contains 'cf8' binary; install as 'cf'
+          sudo mv cf8 /usr/local/bin/cf
+          sudo chmod +x /usr/local/bin/cf
+          cf version
+ 
+         
+      - name: Cloud Foundry login
+        env:
+          CF_API: ${{ secrets.CF_API }}
+          CF_USERNAME: ${{ secrets.CF_USERNAME }}
+          CF_PASSWORD: ${{ secrets.CF_PASSWORD }}
+          CF_ORG: ${{ secrets.CF_ORG }}
+          CF_SPACE: ${{ secrets.CF_SPACE }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: |
+          if [ -z "$CF_API" ]; then
+            echo "CF_API secret is not set. Skipping cf login.";
+            exit 0
+          fi
+          cf api "$CF_API" --skip-ssl-validation || cf api "$CF_API"
+          if [ -n "$CF_USERNAME" ] && [ -n "$CF_PASSWORD" ]; then
+            echo "Logging in with username/password"
+            cf auth "$CF_USERNAME" "$CF_PASSWORD"
+          elif [ -n "$CF_API_TOKEN" ]; then
+            echo "Logging in with API token"
+            cf auth "$CF_API_TOKEN"
+          else
+            echo "No CF credentials provided. Set secrets CF_USERNAME/CF_PASSWORD or CF_API_TOKEN.";
+            exit 1
+          fi
+          if [ -n "$CF_ORG" ]; then
+            cf target -o "$CF_ORG" -s "$CF_SPACE" || true
+          fi
+         
+      - name: Install MBT (MTA Builder)
+        run: |
+          npm install -g mbt --unsafe-perm
+          mbt --version
+ 
+ 
+      - name: Build the mta file
         run: mbt build
-
-      - name: Deploy MTA Archive
+ 
+       
+      - name: Install CF MultiApps plugin (for cf deploy)
+        shell: bash
         run: |
-          cf deploy mta_archives/incident-management_1.0.0.mtar --retries
-
-      - name: List Deployed Apps
-        run: cf apps
+          set -euo pipefail
+          # Add the official plugin index (if not already present)
+          if ! cf list-plugin-repos | grep -q "^CF-Community"; then
+            cf add-plugin-repo CF-Community https://plugins.cloudfoundry.org
+          fi
+          # Install the multiapps plugin (provides `cf deploy`, `cf mta-*` commands)
+          cf install-plugin -r CF-Community multiapps -f
+          cf plugins
+ 
+ 
+     
+      - name: Deploy to Cloud Foundry
+        shell: bash
+        run: |
+           set -euo pipefail
+            # Find MTAR file
+            MTAR_PATH="$(ls -1 mta_archives/*.mtar | head -n1)"
+            echo "MTAR file: ${MTAR_PATH}"
+ 
+            # Check if there's an active operation for this MTA
+            ACTIVE_OP=$(cf mta-ops | grep "incident-managment" | awk '{print $1}' || true)
+ 
+            if [ -n "$ACTIVE_OP" ]; then
+              echo "Found existing MTA operation: $ACTIVE_OP"
+              echo "Aborting previous operation..."
+              cf deploy -i "$ACTIVE_OP" -a abort -f || true
+            else
+              echo "No active MTA operation found."
+            fi
+ 
+            # Now deploy normally (no interactive prompts)
+            echo "Starting deployment..."
+            cf deploy "${MTAR_PATH}" -f
+ 
+ 
+ 
+      - name: Delete the generated mta file (optional)
+        run: ls
