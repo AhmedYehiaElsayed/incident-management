@@ -100,7 +100,7 @@ jobs:
      
       - name: Deploy to Cloud Foundry
         shell: bash
-        run: cf deploy mta_archives/incident-management_1.0.0.mtar --retries 3
+        run: cf deploy mta_archives/incident-management_1.0.0.mtar 
  
  
  
