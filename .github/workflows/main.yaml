@@ -99,28 +99,28 @@ jobs:
  
      
       - name: Deploy to Cloud Foundry
-          shell: bash
-          run: |
-            set -euo pipefail
-              # Find MTAR file
-              MTAR_PATH="$(ls -1 mta_archives/*.mtar | head -n1)"
-              echo "MTAR file: ${MTAR_PATH}"
-  
-              # Check if there's an active operation for this MTA
-              ACTIVE_OP=$(cf mta-ops | grep "incident-managment" | awk '{print $1}' || true)
-  
-              if [ -n "$ACTIVE_OP" ]; then
-                echo "Found existing MTA operation: $ACTIVE_OP"
-                echo "Aborting previous operation..."
-                cf deploy -i "$ACTIVE_OP" -a abort -f || true
-              else
-                echo "No active MTA operation found."
-              fi
-  
-              # Now deploy normally (no interactive prompts)
-              echo "Starting deployment..."
-              cf deploy "${MTAR_PATH}" -f
- 
+        shell: bash
+        run: |
+          set -euo pipefail
+            # Find MTAR file
+            MTAR_PATH="$(ls -1 mta_archives/*.mtar | head -n1)"
+            echo "MTAR file: ${MTAR_PATH}"
+
+            # Check if there's an active operation for this MTA
+            ACTIVE_OP=$(cf mta-ops | grep "incident-managment" | awk '{print $1}' || true)
+
+            if [ -n "$ACTIVE_OP" ]; then
+              echo "Found existing MTA operation: $ACTIVE_OP"
+              echo "Aborting previous operation..."
+              cf deploy -i "$ACTIVE_OP" -a abort -f || true
+            else
+              echo "No active MTA operation found."
+            fi
+
+            # Now deploy normally (no interactive prompts)
+            echo "Starting deployment..."
+            cf deploy "${MTAR_PATH}" -f
+
  
       - name: Delete the generated mta file (optional)
         run: ls
