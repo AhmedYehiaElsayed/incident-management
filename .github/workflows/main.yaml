@@ -15,7 +15,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
- 
+      - name: Run CAP Tests (npm test)
+        run: npm test
       - name: Initialize worker (placeholder)
         run: |
           echo "Initialize worker - placeholder"

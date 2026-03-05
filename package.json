@@ -17,7 +17,8 @@
   },
   "scripts": {
     "start": "cds-serve",
-    "watch-incidents": "cds watch --open ns.incidents/index.html?sap-ui-xx-viewCache=false --livereload false"
+    "watch-incidents": "cds watch --open ns.incidents/index.html?sap-ui-xx-viewCache=false --livereload false",
+    "test": "npx jest tests/test.js"
   },
   "cds": {
     "requires": {
